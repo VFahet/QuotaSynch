@@ -2,8 +2,8 @@
 
 **Statut :** Draft
 **Enjeu :** 1
-**Mode :** à fixer à l'arbitrage
-**Epic :** à ouvrir à l'arbitrage
+**Mode :** Direct — une session, cinq tranches environ, Enjeu 1, une PR lisible.
+**Epic :** https://github.com/VFahet/QuotaSynch/issues/3
 
 ## Énoncé du problème
 
