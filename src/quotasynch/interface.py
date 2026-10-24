@@ -1,9 +1,9 @@
 """La logique de l'interface, sans `tkinter` : ce que la couche d'affichage montre."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from quotasynch import journal
-from quotasynch.config import Config, ConfigError, load_config
+from quotasynch import journal, scheduler
+from quotasynch.config import Config, ConfigError, load_config, parse_anchors, write_config
 from quotasynch.system import System
 
 JOURNAL_LIMIT = 50
@@ -48,3 +48,19 @@ def load_hours(system: System) -> HoursView:
     except ConfigError as erreur:
         return HoursView([f"{a:%H:%M}" for a in Config().anchors], str(erreur))
     return HoursView([f"{a:%H:%M}" for a in config.anchors])
+
+
+def save_hours(system: System, texts: list[str]) -> str:
+    """Valide les heures, réécrit la configuration et recrée la tâche planifiée.
+
+    Lève `ConfigError` avant toute écriture si les heures sont invalides, et
+    `SchedulerError` si le Planificateur refuse (la configuration reste alors écrite).
+    """
+    anchors = tuple(sorted(parse_anchors([text.strip() for text in texts])))
+    try:
+        current = load_config(system.config_file())
+    except ConfigError:
+        current = Config()  # un fichier invalide est remplacé par les heures saisies
+    config = replace(current, anchors=anchors)
+    write_config(system.config_file(), config)
+    return scheduler.install(config, system)
