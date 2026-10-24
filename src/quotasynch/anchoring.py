@@ -43,7 +43,7 @@ def run_anchor(config: Config, system: System) -> str:
     planned = planned_time(now, config.anchors)
     last = read_last_send(system.state_file())
     if last is not None and window_open(now, last):
-        depuis = f"fenêtre ouverte depuis {last:%H:%M}"
+        depuis = f"fenêtre ouverte depuis {last:%d/%m %H:%M}"
         record(system, journal.Entry(planned, now, journal.SKIPPED, depuis))
         return f"saut : une fenêtre est ouverte depuis {last:%d/%m %H:%M}"
     try:

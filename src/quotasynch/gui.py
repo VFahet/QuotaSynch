@@ -4,7 +4,7 @@ import tkinter
 from tkinter import ttk
 
 from quotasynch.config import ConfigError
-from quotasynch.interface import JournalRow, journal_rows, load_hours, save_hours
+from quotasynch.interface import HoursView, journal_rows, load_hours, save_hours
 from quotasynch.scheduler import SchedulerError
 from quotasynch.system import System
 
@@ -59,19 +59,22 @@ class Interface:
         self.table.grid(row=6, column=0, sticky="nsew")
         self.empty = ttk.Label(frame, text=EMPTY_JOURNAL)
         self.empty.grid(row=7, column=0, sticky="w")
-        ttk.Button(frame, text="Actualiser le journal", command=self.refresh_journal).grid(
-            row=8, column=0, sticky="w", pady=(6, 0)
-        )
         frame.rowconfigure(6, weight=1)
 
-        view = load_hours(system)
-        for hour in view.hours:
-            self.hours.insert("end", hour)
+        view = self.load_hours()
         if view.problem:
             self.show(
-                f"Configuration invalide : {view.problem}. Corrigez les heures puis enregistrez."
+                f"Configuration invalide : {view.problem}. Corrigez les heures puis enregistrez "
+                "(le modèle et le message reviendront à leurs valeurs par défaut)."
             )
         self.refresh_journal()
+
+    def load_hours(self) -> HoursView:
+        view = load_hours(self.system)
+        self.hours.delete(0, "end")
+        for hour in view.hours:
+            self.hours.insert("end", hour)
+        return view
 
     def show(self, text: str) -> None:
         self.message.configure(text=text)
@@ -92,17 +95,22 @@ class Interface:
     def save(self) -> None:
         try:
             result = save_hours(self.system, self.hour_list())
-        except (ConfigError, SchedulerError, OSError) as erreur:
+        except SchedulerError as erreur:
+            self.load_hours()
+            self.show(
+                "Heures enregistrées dans la configuration, mais la tâche planifiée n'a pas "
+                f"été mise à jour : {erreur}. Enregistrez de nouveau pour réessayer."
+            )
+            return
+        except (ConfigError, OSError) as erreur:
             self.show(f"Heures non enregistrées : {erreur}")
             return
-        self.hours.delete(0, "end")
-        for hour in load_hours(self.system).hours:
-            self.hours.insert("end", hour)
+        self.load_hours()
         self.show(f"Heures enregistrées. {result}")
 
     def refresh_journal(self) -> None:
         self.table.delete(*self.table.get_children())
-        rows: list[JournalRow] = journal_rows(self.system)
+        rows = journal_rows(self.system)
         for row in rows:
             self.table.insert(
                 "", "end", values=(row.planned, row.actual, row.delay, row.result, row.detail)

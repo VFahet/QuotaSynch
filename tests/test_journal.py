@@ -63,7 +63,7 @@ def test_un_saut_est_consigne_avec_le_depuis_quand_de_la_fenetre(machine: Machin
     [ligne] = machine.journal()
     assert ligne["resultat"] == "saut"
     assert ligne["reelle"] == NOW.isoformat()
-    assert ligne["detail"] == "fenêtre ouverte depuis 08:01"
+    assert ligne["detail"] == "fenêtre ouverte depuis 26/10 08:01"
 
 
 def test_un_echec_est_consigne_avec_la_derniere_ligne_d_erreur_de_claude(
@@ -135,3 +135,14 @@ def test_les_autres_commandes_ne_consignent_pas_une_configuration_invalide(
 
     assert main(["status"], machine.system) == 1
     assert machine.journal() == []
+
+
+def test_une_ligne_illisible_du_journal_est_ignoree_sans_faire_planter_status(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    main(["run"], machine.system)
+    with machine.journal_file.open("ab") as fichier:
+        fichier.write(b'\xff\xfe pas du json\n{"prevue": 3}\n')
+
+    assert main(["status"], machine.system) == 0
+    assert "dernier ancrage : envoyé" in capsys.readouterr().out

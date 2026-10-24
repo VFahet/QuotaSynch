@@ -57,10 +57,10 @@ def _parse(raw: str) -> Entry:
     )
 
 
-def read(path: Path, limit: int | None = None) -> list[Entry]:
+def read(path: Path, limit: int) -> list[Entry]:
     """Les derniers ancrages, le plus récent d'abord ; une ligne illisible est ignorée."""
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
         return []
     entries: list[Entry] = []
@@ -69,6 +69,6 @@ def read(path: Path, limit: int | None = None) -> list[Entry]:
             entries.append(_parse(raw))
         except (ValueError, KeyError, TypeError):
             continue
-        if limit is not None and len(entries) == limit:
+        if len(entries) == limit:
             break
     return entries

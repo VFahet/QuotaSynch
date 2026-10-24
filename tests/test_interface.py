@@ -40,7 +40,7 @@ def test_le_journal_se_lit_du_plus_recent_au_plus_ancien_avec_le_retard(
     assert lignes[-1].planned == "26/10 10:01"
     assert lignes[-1].actual == "26/10 10:01"
     assert lignes[-1].delay == "0 min"
-    assert lignes[0].detail == "fenêtre ouverte depuis 10:01"
+    assert lignes[0].detail == "fenêtre ouverte depuis 26/10 10:01"
 
 
 def test_une_ligne_sans_heure_prevue_s_affiche_avec_un_tiret(machine: Machine) -> None:
