@@ -2,7 +2,8 @@
 
 **Statut :** Draft
 **Enjeu :** 1
-**Mode :** <rempli à l'étape 4>
+**Mode :** Direct — une session, cinq tranches environ, Enjeu 1, une PR lisible.
+**Epic :** https://github.com/VFahet/QuotaSynch/issues/1
 
 ## Énoncé du problème
 
