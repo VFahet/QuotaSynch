@@ -9,6 +9,7 @@ from quotasynch.anchoring import run_anchor
 from quotasynch.config import ConfigError, load_config
 from quotasynch.scheduler import SchedulerError
 from quotasynch.sender import SendError
+from quotasynch.status import describe
 from quotasynch.system import System
 
 
@@ -18,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("run", help="exécute un ancrage (ce que lance la tâche planifiée)")
     commands.add_parser("install", help="crée la tâche du Planificateur de tâches")
     commands.add_parser("uninstall", help="supprime la tâche du Planificateur de tâches")
+    commands.add_parser("status", help="montre la tâche, la configuration et le dernier envoi")
     return parser
 
 
@@ -33,6 +35,8 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
             print(run_anchor(config, system))
         elif args.command == "install":
             print(scheduler.install(config, system))
+        elif args.command == "status":
+            print(describe(config, system))
     except (ConfigError, SendError, SchedulerError) as erreur:
         print(f"quotasynch : {erreur}", file=sys.stderr)
         return 1
