@@ -18,13 +18,17 @@ class FakeProcess:
     returncode: int = 0
     stderr: str = ""
     raises: BaseException | None = None
+    returncodes: dict[str, int] = field(default_factory=dict)
+    stdout: str = ""
     calls: list[tuple[list[str], dict[str, Any]]] = field(default_factory=list)
 
     def __call__(self, args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        """`returncodes` fixe un code par sous-commande (`args[1]`), sinon `returncode`."""
         self.calls.append((args, kwargs))
         if self.raises is not None:
             raise self.raises
-        return subprocess.CompletedProcess(args, self.returncode, stdout="", stderr=self.stderr)
+        code = self.returncodes.get(args[1], self.returncode)
+        return subprocess.CompletedProcess(args, code, stdout=self.stdout, stderr=self.stderr)
 
 
 @dataclass

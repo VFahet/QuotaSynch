@@ -4,8 +4,10 @@ import argparse
 import sys
 from collections.abc import Sequence
 
+from quotasynch import scheduler
 from quotasynch.anchoring import run_anchor
 from quotasynch.config import ConfigError, load_config
+from quotasynch.scheduler import SchedulerError
 from quotasynch.sender import SendError
 from quotasynch.system import System
 
@@ -14,6 +16,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="quotasynch", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("run", help="exécute un ancrage (ce que lance la tâche planifiée)")
+    commands.add_parser("install", help="crée la tâche du Planificateur de tâches")
+    commands.add_parser("uninstall", help="supprime la tâche du Planificateur de tâches")
     return parser
 
 
@@ -21,10 +25,15 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
     args = build_parser().parse_args(argv)
     system = system or System()
     try:
+        if args.command == "uninstall":
+            print(scheduler.uninstall(system))
+            return 0
         config = load_config(system.config_file())
         if args.command == "run":
             print(run_anchor(config, system))
-    except (ConfigError, SendError) as erreur:
+        elif args.command == "install":
+            print(scheduler.install(config, system))
+    except (ConfigError, SendError, SchedulerError) as erreur:
         print(f"quotasynch : {erreur}", file=sys.stderr)
         return 1
     return 0
