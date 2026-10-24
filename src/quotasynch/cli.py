@@ -5,7 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from quotasynch import scheduler
-from quotasynch.anchoring import run_anchor
+from quotasynch.anchoring import record_config_failure, run_anchor
 from quotasynch.config import ConfigError, load_config
 from quotasynch.scheduler import SchedulerError
 from quotasynch.sender import SendError
@@ -30,7 +30,12 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
         if args.command == "uninstall":
             print(scheduler.uninstall(system))
             return 0
-        config = load_config(system.config_file())
+        try:
+            config = load_config(system.config_file())
+        except ConfigError as erreur:
+            if args.command == "run":
+                record_config_failure(system, erreur)
+            raise
         if args.command == "run":
             print(run_anchor(config, system))
         elif args.command == "install":

@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, time, timedelta
 
 from quotasynch import journal
-from quotasynch.config import WINDOW_HOURS, Config
+from quotasynch.config import WINDOW_HOURS, Config, ConfigError
 from quotasynch.sender import SendError, send_message
 from quotasynch.state import read_last_send, write_last_send
 from quotasynch.system import System
@@ -54,3 +54,8 @@ def run_anchor(config: Config, system: System) -> str:
     write_last_send(system.state_file(), now)
     record(system, journal.Entry(planned, now, journal.SENT))
     return f"envoyé à {now:%d/%m %H:%M}"
+
+
+def record_config_failure(system: System, erreur: ConfigError) -> None:
+    """Consigne un ancrage perdu parce que la configuration est inutilisable."""
+    record(system, journal.Entry(None, system.clock(), journal.FAILED, str(erreur)))
