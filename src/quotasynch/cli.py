@@ -5,7 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from quotasynch import scheduler
-from quotasynch.anchoring import run_anchor
+from quotasynch.anchoring import record_config_failure, run_anchor
 from quotasynch.config import ConfigError, load_config
 from quotasynch.scheduler import SchedulerError
 from quotasynch.sender import SendError
@@ -19,6 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("run", help="exécute un ancrage (ce que lance la tâche planifiée)")
     commands.add_parser("install", help="crée la tâche du Planificateur de tâches")
     commands.add_parser("uninstall", help="supprime la tâche du Planificateur de tâches")
+    commands.add_parser("gui", help="ouvre l'interface : heures d'ancrage et journal")
     commands.add_parser("status", help="montre la tâche, la configuration et le dernier envoi")
     return parser
 
@@ -27,10 +28,20 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
     args = build_parser().parse_args(argv)
     system = system or System()
     try:
+        if args.command == "gui":
+            from quotasynch import gui  # tkinter ne se charge que pour l'interface
+
+            gui.open_interface(system)
+            return 0
         if args.command == "uninstall":
             print(scheduler.uninstall(system))
             return 0
-        config = load_config(system.config_file())
+        try:
+            config = load_config(system.config_file())
+        except ConfigError as erreur:
+            if args.command == "run":
+                record_config_failure(system, erreur)
+            raise
         if args.command == "run":
             print(run_anchor(config, system))
         elif args.command == "install":

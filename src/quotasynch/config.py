@@ -1,5 +1,6 @@
 """Configuration : heures d'ancrage, modèle, message et réveil du PC."""
 
+import json
 import tomllib
 from dataclasses import dataclass
 from datetime import datetime, time
@@ -44,6 +45,17 @@ def _check_gaps(anchors: tuple[time, ...]) -> None:
         )
 
 
+def parse_anchors(raw: object) -> tuple[time, ...]:
+    """Valide une liste d'heures `HH:MM` : non vide, sans doublon, espacées d'au moins 5 h."""
+    if not isinstance(raw, list):
+        raise ConfigError('`anchors` doit être une liste, par exemple ["05:00", "10:01"]')
+    anchors = tuple(_parse_anchor(a) for a in raw)
+    if not anchors:
+        raise ConfigError("au moins une heure d'ancrage est nécessaire")
+    _check_gaps(anchors)
+    return anchors
+
+
 def _typed[T](data: dict[str, object], key: str, kind: type[T], default: T) -> T:
     value = data.get(key, default)
     if not isinstance(value, kind):
@@ -61,17 +73,23 @@ def load_config(path: Path) -> Config:
     except (tomllib.TOMLDecodeError, OSError) as erreur:
         raise ConfigError(f"configuration illisible ({path}) : {erreur}") from None
     raw_anchors = data.get("anchors")
-    if raw_anchors is not None and not isinstance(raw_anchors, list):
-        raise ConfigError('`anchors` doit être une liste, par exemple ["05:00", "10:01"]')
-    anchors = (
-        defaults.anchors if raw_anchors is None else tuple(_parse_anchor(a) for a in raw_anchors)
-    )
-    if not anchors:
-        raise ConfigError("au moins une heure d'ancrage est nécessaire")
-    _check_gaps(anchors)
+    anchors = defaults.anchors if raw_anchors is None else parse_anchors(raw_anchors)
     return Config(
         anchors=anchors,
         model=_typed(data, "model", str, defaults.model),
         message=_typed(data, "message", str, defaults.message),
         wake=_typed(data, "wake", bool, defaults.wake),
+    )
+
+
+def write_config(path: Path, config: Config) -> None:
+    """Réécrit la configuration ; les commentaires d'un fichier édité à la main sont perdus."""
+    anchors = ", ".join(json.dumps(f"{a:%H:%M}") for a in config.anchors)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"anchors = [{anchors}]\n"
+        f"model = {json.dumps(config.model, ensure_ascii=False)}\n"
+        f"message = {json.dumps(config.message, ensure_ascii=False)}\n"
+        f"wake = {'true' if config.wake else 'false'}\n",
+        encoding="utf-8",
     )
