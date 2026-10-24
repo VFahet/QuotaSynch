@@ -106,4 +106,5 @@ def uninstall(system: System) -> str:
     result = _schtasks(system, "/Delete", "/TN", TASK_NAME, "/F")
     if result.returncode != 0:
         raise SchedulerError(f"suppression de la tâche refusée : {result.stderr.strip()}")
+    (system.data_dir() / "task.xml").unlink(missing_ok=True)
     return f"tâche {TASK_NAME} supprimée"

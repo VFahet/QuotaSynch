@@ -56,3 +56,19 @@ def test_un_toml_invalide_est_refuse(tmp_path: Path) -> None:
     chemin = ecrire(tmp_path, "anchors = [")
     with pytest.raises(ConfigError):
         load_config(chemin)
+
+
+@pytest.mark.parametrize(
+    "contenu",
+    [
+        'anchors = "05:00"\n',
+        'anchors = ["05:00:30"]\n',
+        "anchors = []\n",
+        'wake = "false"\n',
+        "model = 3\n",
+    ],
+    ids=["pas-une-liste", "avec-secondes", "vide", "wake-texte", "model-nombre"],
+)
+def test_une_configuration_mal_typee_est_refusee(tmp_path: Path, contenu: str) -> None:
+    with pytest.raises(ConfigError):
+        load_config(ecrire(tmp_path, contenu))

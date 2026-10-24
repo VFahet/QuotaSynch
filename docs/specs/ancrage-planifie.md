@@ -1,6 +1,6 @@
 # spec: ancrage-planifie — Ancrage planifié
 
-**Statut :** Draft
+**Statut :** Implemented
 **Enjeu :** 1
 **Mode :** Direct — une session, cinq tranches environ, Enjeu 1, une PR lisible.
 **Epic :** https://github.com/VFahet/QuotaSynch/issues/1

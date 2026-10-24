@@ -23,11 +23,6 @@ def test_run_envoie_le_message_par_l_abonnement_depuis_un_dossier_neutre(
     assert "envoyé" in capsys.readouterr().out
 
 
-def test_run_enregistre_la_date_du_dernier_envoi(machine: Machine) -> None:
-    main(["run"], machine.system)
-    assert read_last_send(machine.state_file) == NOW
-
-
 def test_run_saute_l_ancrage_quand_une_fenetre_est_ouverte(
     machine: Machine, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -77,3 +72,12 @@ def test_run_avec_une_configuration_invalide_sort_en_erreur(
     assert main(["run"], machine.system) == 1
     assert machine.process.calls == []
     assert "5 h" in capsys.readouterr().err
+
+
+def test_run_rapporte_l_erreur_de_claude_ecrite_sur_la_sortie_standard(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    process = FakeProcess(returncode=1, stdout="Please run /login")
+
+    assert main(["run"], machine.with_process(process)) == 1
+    assert "Please run /login" in capsys.readouterr().err

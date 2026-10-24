@@ -45,5 +45,6 @@ def send_message(config: Config, system: System) -> None:
     except subprocess.TimeoutExpired:
         raise SendError(f"`claude` n'a pas répondu en {TIMEOUT_SECONDS} s") from None
     if result.returncode != 0:
-        detail = result.stderr.strip().splitlines()[-1:] or ["sans message"]
+        sortie = (result.stderr.strip() or result.stdout.strip()).splitlines()
+        detail = sortie[-1:] or ["sans message"]
         raise SendError(f"`claude` a échoué (code {result.returncode}) : {detail[0]}")

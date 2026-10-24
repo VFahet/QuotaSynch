@@ -1,8 +1,6 @@
 """État de l'installation : tâche, configuration et dernier envoi."""
 
-from datetime import timedelta
-
-from quotasynch.anchoring import WINDOW
+from quotasynch.anchoring import WINDOW, window_open
 from quotasynch.config import Config
 from quotasynch.scheduler import TASK_NAME, is_installed
 from quotasynch.state import read_last_send
@@ -14,7 +12,7 @@ def describe(config: Config, system: System) -> str:
     last = read_last_send(system.state_file())
     if last is None:
         envoi = "aucun"
-    elif timedelta(0) <= now - last < WINDOW:
+    elif window_open(now, last):
         envoi = f"{last:%d/%m %H:%M} (fenêtre ouverte jusqu'à {last + WINDOW:%H:%M})"
     else:
         envoi = f"{last:%d/%m %H:%M} (aucune fenêtre ouverte)"

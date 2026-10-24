@@ -37,7 +37,7 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
             print(scheduler.install(config, system))
         elif args.command == "status":
             print(describe(config, system))
-    except (ConfigError, SendError, SchedulerError) as erreur:
+    except (ConfigError, SendError, SchedulerError, OSError) as erreur:
         print(f"quotasynch : {erreur}", file=sys.stderr)
         return 1
     return 0

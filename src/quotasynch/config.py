@@ -2,7 +2,7 @@
 
 import tomllib
 from dataclasses import dataclass
-from datetime import time
+from datetime import datetime, time
 from pathlib import Path
 
 WINDOW_HOURS = 5
@@ -26,7 +26,7 @@ def _parse_anchor(raw: object) -> time:
     try:
         if not isinstance(raw, str):
             raise ValueError
-        return time.fromisoformat(raw)
+        return datetime.strptime(raw, "%H:%M").time()
     except ValueError:
         raise ConfigError(f"heure d'ancrage invalide : {raw!r} (attendu HH:MM)") from None
 
@@ -44,6 +44,13 @@ def _check_gaps(anchors: tuple[time, ...]) -> None:
         )
 
 
+def _typed[T](data: dict[str, object], key: str, kind: type[T], default: T) -> T:
+    value = data.get(key, default)
+    if not isinstance(value, kind):
+        raise ConfigError(f"`{key}` doit être de type {kind.__name__}")
+    return value
+
+
 def load_config(path: Path) -> Config:
     """Lit la configuration ; un fichier absent donne les valeurs par défaut."""
     defaults = Config()
@@ -54,6 +61,8 @@ def load_config(path: Path) -> Config:
     except (tomllib.TOMLDecodeError, OSError) as erreur:
         raise ConfigError(f"configuration illisible ({path}) : {erreur}") from None
     raw_anchors = data.get("anchors")
+    if raw_anchors is not None and not isinstance(raw_anchors, list):
+        raise ConfigError('`anchors` doit être une liste, par exemple ["05:00", "10:01"]')
     anchors = (
         defaults.anchors if raw_anchors is None else tuple(_parse_anchor(a) for a in raw_anchors)
     )
@@ -62,7 +71,7 @@ def load_config(path: Path) -> Config:
     _check_gaps(anchors)
     return Config(
         anchors=anchors,
-        model=str(data.get("model", defaults.model)),
-        message=str(data.get("message", defaults.message)),
-        wake=bool(data.get("wake", defaults.wake)),
+        model=_typed(data, "model", str, defaults.model),
+        message=_typed(data, "message", str, defaults.message),
+        wake=_typed(data, "wake", bool, defaults.wake),
     )
