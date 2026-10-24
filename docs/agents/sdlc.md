@@ -59,8 +59,8 @@ Opérations : `gh issue create --title --body --label spec|ticket`, `gh issue vi
 ## Vérification
 
 - Stack : Python 3.13 avec `uv`, bibliothèque standard autant que possible (outil Windows léger, lancé par le Planificateur de tâches, sans processus résident)
-- Commande unique : aucune, à poser à la première tranche (`uv run poe check`, qui enchaîne formatage, lint, types et tests)
-- Formatage et lint : `ruff` (à poser) · Types : `mypy` (à poser) · Tests : `pytest` (à poser)
+- Commande unique : `uv run poe check`, qui enchaîne formatage, lint, types et tests
+- Formatage et lint : `ruff` · Types : `mypy` (strict) · Tests : `pytest`
 - Navigateur : aucun
 - CI : aucune
 
