@@ -47,3 +47,40 @@ def test_status_apres_la_fin_de_la_fenetre(
     main(["status"], machine.system)
 
     assert "aucune fenêtre ouverte" in capsys.readouterr().out
+
+
+def test_status_dit_qu_aucun_ancrage_n_est_consigne(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    main(["status"], machine.system)
+
+    assert "dernier ancrage : aucun" in capsys.readouterr().out
+
+
+def test_status_montre_le_dernier_ancrage_avec_son_retard(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    main(["run"], machine.system)  # NOW = 10:01, heure prévue 10:01
+    capsys.readouterr()
+
+    main(["status"], machine.system)
+
+    assert "dernier ancrage : envoyé, prévu 10:01, parti 10:01 (retard 0 min)" in (
+        capsys.readouterr().out
+    )
+
+
+def test_status_montre_un_echec_avec_son_detail_et_sans_heure_prevue(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    machine.config_file.parent.mkdir(parents=True)
+    machine.config_file.write_text('anchors = ["05:00", "06:00"]\n', encoding="utf-8")
+    main(["run"], machine.system)
+    machine.config_file.write_text('anchors = ["05:00"]\n', encoding="utf-8")
+    capsys.readouterr()
+
+    main(["status"], machine.system)
+
+    ligne = next(x for x in capsys.readouterr().out.splitlines() if "dernier ancrage" in x)
+    assert ligne.startswith("dernier ancrage : échec, prévu inconnu, parti 10:01 : ")
+    assert "5 h" in ligne

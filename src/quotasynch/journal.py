@@ -9,6 +9,8 @@ SENT = "envoye"
 SKIPPED = "saut"
 FAILED = "echec"
 
+LABELS = {SENT: "envoyé", SKIPPED: "saut", FAILED: "échec"}
+
 
 @dataclass(frozen=True)
 class Entry:
@@ -21,6 +23,14 @@ class Entry:
     def delay(self) -> timedelta | None:
         """Le retard : l'écart entre l'heure réelle et l'heure prévue."""
         return None if self.planned is None else self.actual - self.planned
+
+    @property
+    def delay_minutes(self) -> int | None:
+        return None if self.delay is None else int(self.delay.total_seconds() // 60)
+
+    @property
+    def label(self) -> str:
+        return LABELS.get(self.result, self.result)
 
 
 def append(path: Path, entry: Entry) -> None:
