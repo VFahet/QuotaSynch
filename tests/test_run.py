@@ -26,7 +26,7 @@ def test_run_envoie_le_message_par_l_abonnement_depuis_un_dossier_neutre(
 def test_run_saute_l_ancrage_quand_une_fenetre_est_ouverte(
     machine: Machine, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    ouverte_depuis = NOW - timedelta(hours=4, minutes=59)
+    ouverte_depuis = NOW - timedelta(hours=4, minutes=49)
     write_last_send(machine.state_file, ouverte_depuis)
 
     code = main(["run"], machine.system)
@@ -35,6 +35,17 @@ def test_run_saute_l_ancrage_quand_une_fenetre_est_ouverte(
     assert machine.process.calls == []
     assert read_last_send(machine.state_file) == ouverte_depuis
     assert "saut" in capsys.readouterr().out
+
+
+def test_run_envoie_quand_la_fenetre_precedente_se_ferme_dans_moins_de_dix_minutes(
+    machine: Machine,
+) -> None:
+    """Le cas du 25/10 : envoi à 05:02:31, ancrage de 10:02:00 (4 h 59 plus tard)."""
+    write_last_send(machine.state_file, NOW - timedelta(hours=4, minutes=59))
+
+    main(["run"], machine.system)
+
+    assert len(machine.process.calls) == 1
 
 
 def test_run_envoie_quand_la_fenetre_precedente_vient_de_se_fermer(machine: Machine) -> None:
