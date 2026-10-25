@@ -10,11 +10,14 @@ from quotasynch.state import read_last_send, write_last_send
 from quotasynch.system import System
 
 WINDOW = timedelta(hours=WINDOW_HOURS)
+SKIP_MARGIN = timedelta(minutes=10)  # la tolérance de la métrique 1 du PRD
 
 
-def window_open(now: datetime, last_send: datetime | None) -> bool:
-    """Vrai si le dernier envoi date de moins de 5 h (une horloge reculée ne compte pas)."""
-    return last_send is not None and timedelta(0) <= now - last_send < WINDOW
+def window_open(
+    now: datetime, last_send: datetime | None, margin: timedelta = timedelta(0)
+) -> bool:
+    """Vrai si le dernier envoi date de moins de 5 h moins `margin` (horloge reculée exclue)."""
+    return last_send is not None and timedelta(0) <= now - last_send < WINDOW - margin
 
 
 def planned_time(now: datetime, anchors: tuple[time, ...]) -> datetime:
@@ -42,7 +45,7 @@ def run_anchor(config: Config, system: System) -> str:
     now = system.clock()
     planned = planned_time(now, config.anchors)
     last = read_last_send(system.state_file())
-    if last is not None and window_open(now, last):
+    if last is not None and window_open(now, last, SKIP_MARGIN):
         depuis = f"fenêtre ouverte depuis {last:%d/%m %H:%M}"
         record(system, journal.Entry(planned, now, journal.SKIPPED, depuis))
         return f"saut : une fenêtre est ouverte depuis {last:%d/%m %H:%M}"
