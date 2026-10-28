@@ -36,6 +36,14 @@ _À éviter_ : heure cible, heure planifiée
 L'écart entre l'heure réelle et l'heure prévue d'un ancrage.
 _À éviter_ : décalage, latence
 
+**Instantané** :
+Le dernier état des limites de quota, écrit par la statusline de Claude Code dans un fichier local, que le relevé lit.
+_À éviter_ : snapshot, cache
+
+**Relevé** :
+Le pourcentage de quota consommé lu à un instant, avec l'heure de fin de la fenêtre : une ligne du fichier des relevés.
+_À éviter_ : mesure, échantillon
+
 **Interface** :
 L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage et où l'on lit le journal.
 _À éviter_ : fenêtre (le mot désigne la période de quota), GUI, application

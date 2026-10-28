@@ -47,11 +47,26 @@ class Machine:
     def journal_file(self) -> Path:
         return self.data_dir / "journal.jsonl"
 
+    @property
+    def instantane_file(self) -> Path:
+        return self.data_dir / "instantane.json"
+
+    @property
+    def releves_file(self) -> Path:
+        return self.data_dir / "releves.jsonl"
+
     def journal(self) -> list[dict[str, Any]]:
         """Les lignes du journal telles qu'écrites sur le disque."""
         if not self.journal_file.exists():
             return []
         lignes = self.journal_file.read_text(encoding="utf-8").splitlines()
+        return [json.loads(ligne) for ligne in lignes]
+
+    def releves(self) -> list[dict[str, Any]]:
+        """Les lignes des relevés telles qu'écrites sur le disque."""
+        if not self.releves_file.exists():
+            return []
+        lignes = self.releves_file.read_text(encoding="utf-8").splitlines()
         return [json.loads(ligne) for ligne in lignes]
 
     def with_process(self, process: FakeProcess) -> System:

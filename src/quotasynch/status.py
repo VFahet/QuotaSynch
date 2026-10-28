@@ -1,8 +1,11 @@
 """État de l'installation : tâche, configuration et dernier envoi."""
 
+import math
+
 from quotasynch import journal
 from quotasynch.anchoring import WINDOW, window_open
 from quotasynch.config import Config
+from quotasynch.releves import Limite, read_last
 from quotasynch.scheduler import TASK_NAME, is_installed
 from quotasynch.state import read_last_send
 from quotasynch.system import System
@@ -20,6 +23,22 @@ def _last_anchor(system: System) -> str:
     return f"{ligne} : {entry.detail}" if entry.detail and entry.result != journal.SENT else ligne
 
 
+def _pourcentage(limite: Limite | None) -> str:
+    if limite is None:
+        return "–"
+    return f"{math.floor(limite.pct + 0.5)} %"
+
+
+def _dernier_releve(system: System) -> str:
+    releve = read_last(system.releves_file())
+    if releve is None:
+        return "aucun"
+    minutes = int((system.clock() - releve.heure).total_seconds() // 60)
+    fenetre = _pourcentage(releve.fenetre)
+    semaine = _pourcentage(releve.semaine)
+    return f"fenêtre {fenetre}, semaine {semaine} (il y a {minutes} min)"
+
+
 def describe(config: Config, system: System) -> str:
     now = system.clock()
     last = read_last_send(system.state_file())
@@ -35,5 +54,6 @@ def describe(config: Config, system: System) -> str:
         f"réveil du PC : {'oui' if config.wake else 'non'}",
         f"dernier envoi : {envoi}",
         f"dernier ancrage : {_last_anchor(system)}",
+        f"dernier relevé : {_dernier_releve(system)}",
     ]
     return "\n".join(lignes)

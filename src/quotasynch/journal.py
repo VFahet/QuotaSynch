@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from quotasynch import jsonl
+
 SENT = "envoye"
 SKIPPED = "saut"
 FAILED = "echec"
@@ -34,15 +36,15 @@ class Entry:
 
 
 def append(path: Path, entry: Entry) -> None:
-    line = {
-        "prevue": entry.planned.isoformat() if entry.planned else None,
-        "reelle": entry.actual.isoformat(),
-        "resultat": entry.result,
-        "detail": entry.detail,
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as file:
-        file.write(json.dumps(line, ensure_ascii=False) + "\n")
+    jsonl.append(
+        path,
+        {
+            "prevue": entry.planned.isoformat() if entry.planned else None,
+            "reelle": entry.actual.isoformat(),
+            "resultat": entry.result,
+            "detail": entry.detail,
+        },
+    )
 
 
 def _parse(raw: str) -> Entry:
@@ -59,16 +61,4 @@ def _parse(raw: str) -> Entry:
 
 def read(path: Path, limit: int) -> list[Entry]:
     """Les derniers ancrages, le plus récent d'abord ; une ligne illisible est ignorée."""
-    try:
-        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-    except OSError:
-        return []
-    entries: list[Entry] = []
-    for raw in reversed(lines):
-        try:
-            entries.append(_parse(raw))
-        except (ValueError, KeyError, TypeError):
-            continue
-        if len(entries) == limit:
-            break
-    return entries
+    return jsonl.read(path, _parse, limit)
