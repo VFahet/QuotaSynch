@@ -8,6 +8,7 @@ import pytest
 from quotasynch.cli import main
 from quotasynch.state import write_last_send
 from tests.conftest import NOW, FakeProcess, Machine
+from tests.test_install import ANCRAGE, RELEVE, PlanificateurFictif
 
 FIN_FENETRE = "2026-10-26T12:00:00+02:00"
 FIN_SEMAINE = "2026-11-02T12:00:00+02:00"
@@ -52,6 +53,18 @@ def test_status_signale_une_tache_non_installee(
 
     assert main(["status"], machine.with_process(absente)) == 0
     assert "non installée" in capsys.readouterr().out
+
+
+def test_status_dit_si_la_tache_de_releve_est_installee(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    seulement_l_ancrage = PlanificateurFictif(presentes=frozenset({ANCRAGE}))
+
+    main(["status"], machine.with_process(seulement_l_ancrage))
+
+    lignes = capsys.readouterr().out.splitlines()
+    assert f"tâche {ANCRAGE} : installée" in lignes
+    assert f"tâche {RELEVE} : non installée" in lignes
 
 
 def test_status_donne_la_fin_de_la_fenetre_ouverte(
