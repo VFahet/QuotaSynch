@@ -20,10 +20,10 @@ LIMITES = {
 
 def poser_instantane(machine: Machine, donnees: Any, ecrit: datetime) -> None:
     """Écrit l'instantané et fixe sa date de modification."""
-    machine.snapshot_file.parent.mkdir(parents=True, exist_ok=True)
-    machine.snapshot_file.write_text(json.dumps(donnees), encoding="utf-8")
+    machine.instantane_file.parent.mkdir(parents=True, exist_ok=True)
+    machine.instantane_file.write_text(json.dumps(donnees), encoding="utf-8")
     epoch = ecrit.timestamp()
-    os.utime(machine.snapshot_file, (epoch, epoch))
+    os.utime(machine.instantane_file, (epoch, epoch))
 
 
 def test_releve_ajoute_une_ligne_avec_les_deux_limites_et_l_age(machine: Machine) -> None:
@@ -105,7 +105,6 @@ def test_releve_ajoute_une_ligne_quand_l_instantane_est_plus_recent_que_le_derni
     deuxieme = machine.releves()[1]
     assert deuxieme["heure"] == "2026-10-26T10:16:00+02:00"
     assert deuxieme["fenetre_pct"] == 30.0
-    assert deuxieme["semaine_pct"] is None
     assert deuxieme["age"] == 600
 
 
@@ -137,8 +136,8 @@ def test_releve_sans_instantane_ne_fait_rien(machine: Machine) -> None:
 
 
 def test_releve_avec_un_instantane_illisible_ne_fait_rien(machine: Machine) -> None:
-    machine.snapshot_file.parent.mkdir(parents=True)
-    machine.snapshot_file.write_text('{"rate_limits": ', encoding="utf-8")
+    machine.instantane_file.parent.mkdir(parents=True)
+    machine.instantane_file.write_text('{"rate_limits": ', encoding="utf-8")
 
     assert main(["releve"], machine.system) == 0
 

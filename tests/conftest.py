@@ -48,8 +48,8 @@ class Machine:
         return self.data_dir / "journal.jsonl"
 
     @property
-    def snapshot_file(self) -> Path:
-        return self.data_dir / "snapshot.json"
+    def instantane_file(self) -> Path:
+        return self.data_dir / "instantane.json"
 
     @property
     def releves_file(self) -> Path:

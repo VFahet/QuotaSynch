@@ -163,8 +163,6 @@ def install(config: Config, system: System) -> str:
 
 
 def uninstall(system: System) -> str:
-    for fichier in (TASK_FILE, RELEVE_TASK_FILE):
-        (system.data_dir() / fichier).unlink(missing_ok=True)
     presentes = [nom for nom in (TASK_NAME, RELEVE_TASK_NAME) if _presente(system, nom)]
     if not presentes:
         return f"tâches {TASK_NAME} et {RELEVE_TASK_NAME} déjà absentes"
@@ -172,4 +170,6 @@ def uninstall(system: System) -> str:
         result = _schtasks(system, "/Delete", "/TN", nom, "/F")
         if result.returncode != 0:
             raise SchedulerError(f"suppression de la tâche {nom} refusée : {result.stderr.strip()}")
+    for fichier in (TASK_FILE, RELEVE_TASK_FILE):
+        (system.data_dir() / fichier).unlink(missing_ok=True)
     return f"tâches supprimées : {', '.join(presentes)}"
