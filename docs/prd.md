@@ -52,7 +52,7 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 - Abonnement Pro ; Claude Code 2.1.x déjà installé et connecté.
 - Python 3.13 et `uv` déjà présents sur la machine de l'auteur.
 - Projet solo, très petit, dépôt public sur GitHub.
-- Risque : l'indicateur de quota (`rate_limits`) n'est pas une interface garantie. Il peut être absent ou changer de format selon la version.
+- Risque : l'indicateur de quota (`rate_limits`) n'est pas une interface garantie. Il peut être absent ou changer de format selon la version. Vérifié le 2026-10-28 : il existe et est documenté, mais la statusline qui le porte ne tourne pas dans le panneau graphique de l'extension VS Code, seulement dans le terminal.
 
 ## Fonctionnalités
 
@@ -73,7 +73,8 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 ## Questions ouvertes
 
 - Le troisième acteur : à nommer par l'auteur.
-- La source du relevé hors session : `rate_limits` existe et est documenté, mais il n'arrive que par la statusline, donc seulement pendant une session ouverte. Voir `docs/research/source-releve-quota.md`, à trancher au cadrage de la fonctionnalité 3.
+- Couvrir l'usage dans le panneau VS Code : le relevé (fonctionnalité 3, faite) ne voit que les sessions ouvertes dans un terminal. L'auteur doit activer « Use Terminal » (`claudeCode.useTerminal`) pour que son usage soit relevé ; l'endpoint d'usage a été écarté (ADR-0002). À rouvrir si le mode terminal ne convient pas à l'auteur.
+- Le début réel d'une fenêtre : le premier relevé montre une fin à 15:00 pour un ancrage parti à 10:02, ce qui laisse penser que le début est arrondi à l'heure. À confirmer avec quelques jours de relevés ; `status` annonce aujourd'hui 15:02.
 
 ## Révisions
 
@@ -82,3 +83,4 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 | 2026-10-24 | Création | — |
 | 2026-10-28 | L'alerte de rythme sort du périmètre ; le relevé du quota (fonctionnalité 3) se recentre sur l'historique | Usage Monitor for Claude affiche le quota et alerte déjà quand l'usage dépasse le temps écoulé, mais ne garde aucun historique |
 | 2026-10-28 | La question ouverte sur `rate_limits` devient une question sur la source hors session | `rate_limits` est vérifié chez l'auteur (Claude Code 2.1.312, Pro) : disponible par la statusline seulement |
+| 2026-10-28 | La fonctionnalité 3 est faite ; la question ouverte porte désormais sur le panneau VS Code et sur le début réel d'une fenêtre | La statusline ne tourne pas dans le panneau (constaté), l'endpoint d'usage est écarté, et le premier relevé donne une fin de fenêtre à l'heure pile |
