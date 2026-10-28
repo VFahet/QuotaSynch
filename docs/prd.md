@@ -25,13 +25,14 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 - Envoyer à ces heures un message minimal, par l'abonnement.
 - Rattraper un envoi manqué dès que le PC est de nouveau disponible.
 - Garder une trace de chaque envoi, réussi ou en échec.
-- Relever le pourcentage de quota consommé à intervalle régulier et juste avant la fin de chaque fenêtre.
+- Relever le pourcentage de quota consommé à intervalle régulier et juste avant la fin de chaque fenêtre, et conserver ces relevés : l'historique est ce qui manque aujourd'hui.
 - Exporter ces relevés pour analyse.
 
 ## Hors-périmètre
 
 - **macOS et Linux** : aucun besoin exprimé.
 - **Notifications téléphone et version cloud** : le PC portable suffit.
+- **Affichage en direct et alertes de quota**, dont l'alerte de rythme (usage supérieur au temps écoulé de la fenêtre) : l'outil tiers Usage Monitor for Claude, MIT, les fait déjà, y compris l'alerte quand l'usage dépasse le temps écoulé. Il ne garde en revanche aucun historique, et c'est ce que QuotaSynch ajoute.
 - **Calcul automatique des horaires** : il suppose les données de consommation, qui n'existent pas encore.
 - **Analyse graphique poussée** : l'export suffit, l'analyse se fait ailleurs.
 - **Contournement des limites d'usage** : l'outil ne fait que choisir l'heure de départ, il n'augmente pas le quota.
@@ -62,7 +63,7 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 
 ### Ensuite · ordre indicatif, non gelé
 
-3. **Relevé du quota** `releve-quota` — le pourcentage consommé est relevé à intervalle régulier et avant la fin de chaque fenêtre · bloqué par 1
+3. **Relevé du quota** `releve-quota` — le pourcentage consommé est relevé à intervalle régulier et avant la fin de chaque fenêtre, puis conservé : un historique à analyser, non un affichage ni une alerte · bloqué par 1
 4. **Export des relevés** `export-releves` — les relevés sortent dans un format ouvrable ailleurs · bloqué par 3
 
 ### Plus tard · non ordonné
@@ -79,3 +80,4 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 | Date | Ce qui change | Pourquoi |
 | ---- | ------------- | -------- |
 | 2026-10-24 | Création | — |
+| 2026-10-28 | L'alerte de rythme sort du périmètre ; le relevé du quota (fonctionnalité 3) se recentre sur l'historique | Usage Monitor for Claude affiche le quota et alerte déjà quand l'usage dépasse le temps écoulé, mais ne garde aucun historique |
