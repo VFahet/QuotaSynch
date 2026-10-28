@@ -73,7 +73,7 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 ## Questions ouvertes
 
 - Le troisième acteur : à nommer par l'auteur.
-- Le format exact et la disponibilité de `rate_limits` chez l'auteur : à vérifier sur sa version de Claude Code, avant la fonctionnalité 3.
+- La source du relevé hors session : `rate_limits` existe et est documenté, mais il n'arrive que par la statusline, donc seulement pendant une session ouverte. Voir `docs/research/source-releve-quota.md`, à trancher au cadrage de la fonctionnalité 3.
 
 ## Révisions
 
@@ -81,3 +81,4 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 | ---- | ------------- | -------- |
 | 2026-10-24 | Création | — |
 | 2026-10-28 | L'alerte de rythme sort du périmètre ; le relevé du quota (fonctionnalité 3) se recentre sur l'historique | Usage Monitor for Claude affiche le quota et alerte déjà quand l'usage dépasse le temps écoulé, mais ne garde aucun historique |
+| 2026-10-28 | La question ouverte sur `rate_limits` devient une question sur la source hors session | `rate_limits` est vérifié chez l'auteur (Claude Code 2.1.312, Pro) : disponible par la statusline seulement |
