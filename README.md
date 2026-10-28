@@ -42,6 +42,7 @@ Limites :
 
 - pas de relevé tant qu'aucune session Claude Code n'est ouverte ;
 - l'usage sur claude.ai ou Claude Desktop ne fait bouger le pourcentage qu'à la prochaine réponse reçue dans Claude Code ;
+- le panneau graphique de l'extension VS Code n'exécute pas la statusline : pour que ce que vous y faites soit relevé, activez « Use Terminal » (réglage `claudeCode.useTerminal`, dans Extensions > Claude Code) ou lancez `claude` dans le terminal intégré ;
 - seul Git Bash est couvert : les autres interpréteurs de statusline ne le sont pas.
 
 Les fichiers sont dans `%LOCALAPPDATA%\QuotaSynch\` : `instantane.json` (l'instantané) et `releves.jsonl` (les relevés, une ligne JSON par relevé, ajoutée à la fin). Une ligne porte `heure`, `fenetre_pct`, `fenetre_fin`, `semaine_pct`, `semaine_fin` et `age` (secondes entre l'écriture de l'instantané et le relevé). `uv run quotasynch status` montre le dernier relevé.
