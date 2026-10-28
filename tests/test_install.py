@@ -1,5 +1,8 @@
+import subprocess
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -7,13 +10,40 @@ from quotasynch.cli import main
 from tests.conftest import FakeProcess, Machine
 
 NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
+ANCRAGE = "QuotaSynch"
+RELEVE = "QuotaSynch-releve"
 
 
-def tache_installee(machine: Machine) -> ET.Element:
-    [(args, _)] = machine.process.calls
-    assert args[:6] == ["schtasks", "/Create", "/TN", "QuotaSynch", "/XML", args[5]]
+@dataclass
+class PlanificateurFictif(FakeProcess):
+    """Double du Planificateur : `presentes` existent, `refusees` refusent tout sauf la requête."""
+
+    presentes: frozenset[str] = frozenset()
+    refusees: frozenset[str] = frozenset()
+
+    def __call__(self, args: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        nom = args[3]
+        if args[1] == "/Query":
+            self.calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 0 if nom in self.presentes else 1)
+        if nom in self.refusees:
+            self.calls.append((args, kwargs))
+            return subprocess.CompletedProcess(args, 1, stderr="Accès refusé")
+        return super().__call__(args, **kwargs)
+
+
+def tache_installee(machine: Machine, nom: str = ANCRAGE) -> ET.Element:
+    [args] = [args for args, _ in machine.process.calls if args[1:4] == ["/Create", "/TN", nom]]
+    assert args[:6] == ["schtasks", "/Create", "/TN", nom, "/XML", args[5]]
     assert args[6] == "/F"
     return ET.fromstring(Path(args[5]).read_text(encoding="utf-16"))
+
+
+def test_install_pose_aussi_la_tache_de_releve(machine: Machine) -> None:
+    main(["install"], machine.system)
+
+    creations = [args[3] for args, _ in machine.process.calls if args[1] == "/Create"]
+    assert creations == [ANCRAGE, RELEVE]
 
 
 def test_install_cree_une_tache_avec_un_declencheur_par_heure_d_ancrage(
@@ -92,7 +122,7 @@ def test_uninstall_supprime_la_tache(machine: Machine, capsys: pytest.CaptureFix
 
     assert code == 0
     commandes = [args[1] for args, _ in machine.process.calls]
-    assert commandes == ["/Query", "/Delete"]
+    assert commandes == ["/Query", "/Query", "/Delete", "/Delete"]
     assert "supprimée" in capsys.readouterr().out
 
 
@@ -104,5 +134,99 @@ def test_uninstall_sans_tache_installee_ne_fait_rien(
     code = main(["uninstall"], machine.with_process(absente))
 
     assert code == 0
-    assert [args[1] for args, _ in absente.calls] == ["/Query"]
+    assert [args[1] for args, _ in absente.calls] == ["/Query", "/Query"]
     assert "absente" in capsys.readouterr().out
+
+
+def test_releve_repete_toutes_les_15_min_sans_fin(machine: Machine) -> None:
+    main(["install"], machine.system)
+
+    declencheur = tache_installee(machine, RELEVE).find("t:Triggers/t:TimeTrigger", NS)
+    assert declencheur is not None
+    intervalle = declencheur.find("t:Repetition/t:Interval", NS)
+    assert intervalle is not None and intervalle.text == "PT15M"
+    assert declencheur.find("t:Repetition/t:Duration", NS) is None
+
+
+def test_releve_ne_reveille_pas_le_pc_ni_ne_rattrape_meme_avec_le_reveil_active(
+    machine: Machine,
+) -> None:
+    main(["install"], machine.system)
+
+    reglages = tache_installee(machine, RELEVE).find("t:Settings", NS)
+    assert reglages is not None
+    valeur = {e.tag.split("}")[1]: e.text for e in reglages}
+    assert valeur["WakeToRun"] == "false"
+    assert valeur["StartWhenAvailable"] == "false"
+
+
+def test_releve_limite_l_execution_a_une_minute_sans_instance_multiple(machine: Machine) -> None:
+    main(["install"], machine.system)
+
+    reglages = tache_installee(machine, RELEVE).find("t:Settings", NS)
+    assert reglages is not None
+    valeur = {e.tag.split("}")[1]: e.text for e in reglages}
+    assert valeur["ExecutionTimeLimit"] == "PT1M"
+    assert valeur["MultipleInstancesPolicy"] == "IgnoreNew"
+    assert valeur["DisallowStartIfOnBatteries"] == "false"
+    assert valeur["StopIfGoingOnBatteries"] == "false"
+
+
+def test_releve_lance_la_commande_releve_sous_le_compte_de_l_utilisateur(machine: Machine) -> None:
+    main(["install"], machine.system)
+
+    tache = tache_installee(machine, RELEVE)
+    arguments = tache.find(".//t:Exec/t:Arguments", NS)
+    assert arguments is not None and arguments.text == "-m quotasynch releve"
+    session = tache.find(".//t:Principal/t:LogonType", NS)
+    assert session is not None and session.text == "InteractiveToken"
+
+
+def test_uninstall_supprime_les_deux_taches(machine: Machine) -> None:
+    main(["uninstall"], machine.system)
+
+    suppressions = [args[3] for args, _ in machine.process.calls if args[1] == "/Delete"]
+    assert suppressions == [ANCRAGE, RELEVE]
+
+
+def test_uninstall_retire_les_deux_fichiers_xml(machine: Machine) -> None:
+    main(["install"], machine.system)
+    assert (machine.data_dir / "task.xml").exists()
+    assert (machine.data_dir / "releve-task.xml").exists()
+
+    main(["uninstall"], machine.system)
+
+    assert not (machine.data_dir / "task.xml").exists()
+    assert not (machine.data_dir / "releve-task.xml").exists()
+
+
+def test_uninstall_ne_signale_absente_que_si_aucune_tache_n_existe(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    seule_la_releve = PlanificateurFictif(presentes=frozenset({RELEVE}))
+
+    assert main(["uninstall"], machine.with_process(seule_la_releve)) == 0
+
+    suppressions = [args[3] for args, _ in seule_la_releve.calls if args[1] == "/Delete"]
+    assert suppressions == [RELEVE]
+    assert "supprimée" in capsys.readouterr().out
+
+
+def test_uninstall_signale_le_refus_de_suppression_de_la_releve(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    refus = PlanificateurFictif(
+        presentes=frozenset({ANCRAGE, RELEVE}), refusees=frozenset({RELEVE})
+    )
+
+    assert main(["uninstall"], machine.with_process(refus)) == 1
+    assert "Accès refusé" in capsys.readouterr().err
+
+
+def test_install_signale_le_refus_de_la_tache_de_releve(
+    machine: Machine, capsys: pytest.CaptureFixture[str]
+) -> None:
+    refus = PlanificateurFictif(refusees=frozenset({RELEVE}))
+
+    assert main(["install"], machine.with_process(refus)) == 1
+    assert "Accès refusé" in capsys.readouterr().err

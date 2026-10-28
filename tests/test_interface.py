@@ -93,8 +93,11 @@ def test_enregistrer_reecrit_la_configuration_et_recree_la_tache(machine: Machin
     xml = _task_xml(machine)
     assert load_config(machine.config_file).anchors == (time(6, 30), time(12, 0))
     assert "T06:30:00" in xml and "T12:00:00" in xml and "T05:00:00" not in xml
-    [(args, _)] = machine.process.calls
-    assert args[:3] == ["schtasks", "/Create", "/TN"] and args[-1] == "/F"
+    creations = [args for args, _ in machine.process.calls if args[1] == "/Create"]
+    assert [args[3] for args in creations] == ["QuotaSynch", "QuotaSynch-releve"]
+    assert all(
+        args[:3] == ["schtasks", "/Create", "/TN"] and args[-1] == "/F" for args in creations
+    )
     assert "06:30, 12:00" in message
 
 
