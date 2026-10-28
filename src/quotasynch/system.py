@@ -41,5 +41,11 @@ class System:
     def journal_file(self) -> Path:
         return self.data_dir() / "journal.jsonl"
 
+    def snapshot_file(self) -> Path:
+        return self.data_dir() / "snapshot.json"
+
+    def releves_file(self) -> Path:
+        return self.data_dir() / "releves.jsonl"
+
     def run(self, args: list[str], **kwargs: Any) -> "subprocess.CompletedProcess[str]":
         return self.run_process(args, **kwargs)

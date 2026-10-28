@@ -4,7 +4,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from quotasynch import scheduler
+from quotasynch import releves, scheduler
 from quotasynch.anchoring import record_config_failure, run_anchor
 from quotasynch.config import ConfigError, load_config
 from quotasynch.scheduler import SchedulerError
@@ -21,6 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("uninstall", help="supprime la tâche du Planificateur de tâches")
     commands.add_parser("gui", help="ouvre l'interface : heures d'ancrage et journal")
     commands.add_parser("status", help="montre la tâche, la configuration et le dernier envoi")
+    commands.add_parser("releve", help="ajoute un relevé du quota depuis l'instantané")
     return parser
 
 
@@ -35,6 +36,9 @@ def main(argv: Sequence[str] | None = None, system: System | None = None) -> int
             return 0
         if args.command == "uninstall":
             print(scheduler.uninstall(system))
+            return 0
+        if args.command == "releve":
+            releves.releve(system)
             return 0
         try:
             config = load_config(system.config_file())
