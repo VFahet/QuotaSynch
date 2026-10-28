@@ -142,6 +142,10 @@ def is_installed(system: System) -> bool:
     return _presente(system, TASK_NAME)
 
 
+def is_releve_installed(system: System) -> bool:
+    return _presente(system, RELEVE_TASK_NAME)
+
+
 def install(config: Config, system: System) -> str:
     interpreter = _interpreter()
     since = system.clock().date()
@@ -151,12 +155,15 @@ def install(config: Config, system: System) -> str:
         TASK_FILE,
         build_task_xml(config, interpreter, "-m quotasynch run", since),
     )
-    _creer(
-        system,
-        RELEVE_TASK_NAME,
-        RELEVE_TASK_FILE,
-        build_releve_task_xml(interpreter, "-m quotasynch releve", since),
-    )
+    try:
+        _creer(
+            system,
+            RELEVE_TASK_NAME,
+            RELEVE_TASK_FILE,
+            build_releve_task_xml(interpreter, "-m quotasynch releve", since),
+        )
+    except SchedulerError as erreur:
+        raise SchedulerError(f"tâche {TASK_NAME} installée, mais {erreur}") from None
     heures = ", ".join(f"{a:%H:%M}" for a in config.anchors)
     reveil = "avec réveil du PC" if config.wake else "sans réveil du PC"
     return f"tâche {TASK_NAME} installée : {heures} ({reveil})"

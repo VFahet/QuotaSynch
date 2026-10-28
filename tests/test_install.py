@@ -213,4 +213,6 @@ def test_install_signale_le_refus_de_la_tache_de_releve(
     refus = PlanificateurFictif(refusees=frozenset({RELEVE}))
 
     assert main(["install"], machine.with_process(refus)) == 1
-    assert "Accès refusé" in capsys.readouterr().err
+    erreur = capsys.readouterr().err
+    assert "Accès refusé" in erreur
+    assert f"tâche {ANCRAGE} installée" in erreur

@@ -6,7 +6,7 @@ from quotasynch import journal
 from quotasynch.anchoring import WINDOW, window_open
 from quotasynch.config import Config
 from quotasynch.releves import Limite, read_last
-from quotasynch.scheduler import TASK_NAME, is_installed
+from quotasynch.scheduler import RELEVE_TASK_NAME, TASK_NAME, is_installed, is_releve_installed
 from quotasynch.state import read_last_send
 from quotasynch.system import System
 
@@ -50,6 +50,8 @@ def describe(config: Config, system: System) -> str:
         envoi = f"{last:%d/%m %H:%M} (aucune fenêtre ouverte)"
     lignes = [
         f"tâche {TASK_NAME} : {'installée' if is_installed(system) else 'non installée'}",
+        f"tâche {RELEVE_TASK_NAME} : "
+        f"{'installée' if is_releve_installed(system) else 'non installée'}",
         f"heures d'ancrage : {', '.join(f'{a:%H:%M}' for a in config.anchors)}",
         f"réveil du PC : {'oui' if config.wake else 'non'}",
         f"dernier envoi : {envoi}",
