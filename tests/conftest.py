@@ -55,6 +55,10 @@ class Machine:
     def releves_file(self) -> Path:
         return self.data_dir / "releves.jsonl"
 
+    @property
+    def variations_file(self) -> Path:
+        return self.data_dir / "variations.jsonl"
+
     def journal(self) -> list[dict[str, Any]]:
         """Les lignes du journal telles qu'écrites sur le disque."""
         if not self.journal_file.exists():

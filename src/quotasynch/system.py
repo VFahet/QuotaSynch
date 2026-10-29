@@ -47,5 +47,8 @@ class System:
     def releves_file(self) -> Path:
         return self.data_dir() / "releves.jsonl"
 
+    def variations_file(self) -> Path:
+        return self.data_dir() / "variations.jsonl"
+
     def run(self, args: list[str], **kwargs: Any) -> "subprocess.CompletedProcess[str]":
         return self.run_process(args, **kwargs)

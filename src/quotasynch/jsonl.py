@@ -12,8 +12,9 @@ def append(path: Path, line: dict[str, Any]) -> None:
         file.write(json.dumps(line, ensure_ascii=False) + "\n")
 
 
-def read[T](path: Path, parse: Callable[[str], T], limit: int) -> list[T]:
-    """Les derniers enregistrements, le plus récent d'abord ; une ligne illisible est ignorée."""
+def read[T](path: Path, parse: Callable[[str], T], limit: int | None = None) -> list[T]:
+    """Les derniers enregistrements (tous sans `limit`), le plus récent d'abord ; une ligne
+    illisible est ignorée."""
     try:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
@@ -24,6 +25,6 @@ def read[T](path: Path, parse: Callable[[str], T], limit: int) -> list[T]:
             found.append(parse(raw))
         except (ValueError, KeyError, TypeError):
             continue
-        if len(found) == limit:
+        if limit is not None and len(found) == limit:
             break
     return found
