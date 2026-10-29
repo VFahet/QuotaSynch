@@ -1,11 +1,13 @@
-from datetime import time
+import json
+from datetime import datetime, time
 
 import pytest
 
 from quotasynch import gui
 from quotasynch.cli import main
 from quotasynch.config import ConfigError, load_config
-from quotasynch.interface import journal_rows, load_hours, save_hours
+from quotasynch.consommation import NONE, ParHeure, par_heure
+from quotasynch.interface import journal_rows, load_hours, pied_heures, save_hours
 from quotasynch.scheduler import SchedulerError
 from quotasynch.system import System
 from tests.conftest import NOW, FakeProcess, Machine
@@ -162,3 +164,25 @@ def test_enregistrer_remplace_une_configuration_invalide_par_les_heures_saisies(
     save_hours(machine.system, ["05:00", "11:00"])
 
     assert load_config(machine.config_file).anchors == (time(5, 0), time(11, 0))
+
+
+def test_le_pied_des_heures_donne_la_periode_les_jours_et_la_part_non_datee(
+    machine: Machine,
+) -> None:
+    fin = datetime(2026, 10, 26, 12, 0, tzinfo=NOW.tzinfo)
+    limite = {"used_percentage": 10, "resets_at": int(fin.timestamp())}
+    vue = datetime(2026, 10, 26, 10, 0, tzinfo=NOW.tzinfo)
+    machine.variations_file.parent.mkdir(parents=True)
+    ligne = {"heure": int(vue.timestamp()), "rate_limits": {"five_hour": limite}}
+    machine.variations_file.write_text(json.dumps(ligne) + "\n", encoding="utf-8")
+
+    par = par_heure(machine.system)
+    assert par is not None
+
+    assert pied_heures(par) == "Du 26/10 – 26/10 (1 jour) · 100 % de points non datés"
+
+
+def test_le_pied_des_heures_sans_point_de_fenetre_le_dit(machine: Machine) -> None:
+    par = ParHeure(lignes=[], periode="26/10 – 27/10", jours=2, non_date=NONE)
+
+    assert pied_heures(par) == "Du 26/10 – 27/10 (2 jours) · aucun point de fenêtre"
