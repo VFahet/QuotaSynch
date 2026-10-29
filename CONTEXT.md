@@ -44,6 +44,10 @@ _À éviter_ : snapshot, cache
 Le pourcentage de quota consommé lu à un instant, avec l'heure de fin de la fenêtre : une ligne du fichier des relevés.
 _À éviter_ : mesure, échantillon
 
+**Variation** :
+Un changement de l'instantané, consigné par la statusline avec son heure à la seconde près : une ligne du fichier des variations.
+_À éviter_ : historique, événement, delta
+
 **Interface** :
 L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage et où l'on lit le journal.
 _À éviter_ : fenêtre (le mot désigne la période de quota), GUI, application
