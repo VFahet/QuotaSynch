@@ -48,6 +48,10 @@ _À éviter_ : mesure, échantillon
 Un changement de l'instantané, consigné par la statusline avec son heure à la seconde près : une ligne du fichier des variations.
 _À éviter_ : historique, événement, delta
 
+**Point non daté** :
+Un point de fenêtre consommé dont on ne peut pas dire à quelle heure, parce que l'observation précédente date de plus de 30 min : il est compté à part, jamais réparti sur des heures.
+_À éviter_ : point estimé, point lissé
+
 **Interface** :
 L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage et où l'on lit le journal.
 _À éviter_ : fenêtre (le mot désigne la période de quota), GUI, application

@@ -34,7 +34,7 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 - **Notifications téléphone et version cloud** : le PC portable suffit.
 - **Affichage en direct et alertes de quota**, dont l'alerte de rythme (usage supérieur au temps écoulé de la fenêtre) : l'outil tiers Usage Monitor for Claude, MIT, les fait déjà, y compris l'alerte quand l'usage dépasse le temps écoulé. Il ne garde en revanche aucun historique, et c'est ce que QuotaSynch ajoute.
 - **Calcul automatique des horaires** : il suppose les données de consommation, qui n'existent pas encore.
-- **Analyse graphique poussée** : l'export suffit, l'analyse se fait ailleurs.
+- **Graphiques et analyses poussées** : des tableaux simples dans l'interface suffisent, l'export sert au reste.
 - **Contournement des limites d'usage** : l'outil ne fait que choisir l'heure de départ, il n'augmente pas le quota.
 
 ## Exigences non fonctionnelles
@@ -65,6 +65,7 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 
 3. **Relevé du quota** `releve-quota` — le pourcentage consommé est relevé à intervalle régulier et avant la fin de chaque fenêtre, puis conservé : un historique à analyser, non un affichage ni une alerte · bloqué par 1
 4. **Export des relevés** `export-releves` — les relevés sortent dans un format ouvrable ailleurs · bloqué par 3
+6. **Consommation par heure** `consommation-horaire` — l'interface montre à quelles heures de la journée le quota se consomme, et quelles fenêtres se vident, sans répartir ce qui ne se date pas · bloqué par 3
 
 ### Plus tard · non ordonné
 
@@ -85,3 +86,4 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 | 2026-10-28 | La question ouverte sur `rate_limits` devient une question sur la source hors session | `rate_limits` est vérifié chez l'auteur (Claude Code 2.1.312, Pro) : disponible par la statusline seulement |
 | 2026-10-28 | La fonctionnalité 3 est faite ; la question ouverte porte désormais sur le panneau VS Code et sur le début réel d'une fenêtre | La statusline ne tourne pas dans le panneau (constaté), l'endpoint d'usage est écarté, et le premier relevé donne une fin de fenêtre à l'heure pile |
 | 2026-10-29 | La statusline consigne aussi chaque variation de l'instantané, à la seconde près, dans `variations.jsonl` | Savoir à quelle heure le quota se consomme : un relevé toutes les 15 min répartit mal la consommation, et la résolution perdue pendant la collecte ne se rattrape pas |
+| 2026-10-29 | Fonctionnalité 6 `consommation-horaire` ; l'exclusion « analyse graphique poussée » devient « graphiques et analyses poussées » ; `variations.jsonl` peut dépasser 1 Mo par mois en très gros usage | Savoir à quelle heure le quota se consomme demande un calcul honnête que l'auteur ne veut pas refaire dans un tableur ; l'écart de volume est accepté |
