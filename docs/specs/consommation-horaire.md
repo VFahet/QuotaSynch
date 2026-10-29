@@ -3,7 +3,7 @@
 **Statut :** Draft
 **Enjeu :** 1
 **Mode :** Direct — une session, trois tranches, Enjeu 1 (lecture seule de données locales), une PR lisible.
-**Epic :** <à remplir>
+**Epic :** https://github.com/VFahet/QuotaSynch/issues/14
 
 ## Énoncé du problème
 
