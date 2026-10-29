@@ -1,6 +1,6 @@
 # spec: consommation-horaire — Consommation par heure
 
-**Statut :** Draft
+**Statut :** Implemented
 **Enjeu :** 1
 **Mode :** Direct — une session, trois tranches, Enjeu 1 (lecture seule de données locales), une PR lisible.
 **Epic :** https://github.com/VFahet/QuotaSynch/issues/14
@@ -24,7 +24,7 @@ Un onglet « Consommation » dans l'interface, calculé à partir des variations
 Vocabulaire : [CONTEXT.md](../../CONTEXT.md) — **variation**, **instantané**, **fenêtre**, **point non daté**. Source : [ADR-0002](../adr/0002-releve-du-quota-par-la-statusline.md).
 
 - **Source** : `variations.jsonl` seul, dans `%LOCALAPPDATA%\QuotaSynch\`, écrit par la statusline : `heure` (secondes depuis 1970) et `rate_limits` tel quel. Seule `rate_limits.five_hour` sert ; une ligne sans elle, ou illisible, est ignorée. Les relevés restent pour `status`. *(tranché par défaut)*
-- **Nouveau module de calcul**, sans `tkinter`, testé : lit les variations par `jsonl` et rend deux listes de lignes déjà mises en forme pour l'affichage, comme `interface.journal_rows`. `System` gagne le chemin du fichier des variations. Les heures sont converties dans le fuseau de l'horloge du `System`.
+- **Nouveau module de calcul**, sans `tkinter`, testé : lit les variations par `jsonl` et rend deux listes de lignes déjà mises en forme pour l'affichage, comme `interface.journal_rows`. `System` gagne le chemin du fichier des variations. Les heures sont converties en heure locale de leur propre date (`System.local_time`), pour qu'un changement d'heure ne décale pas l'historique ; corrigé à la revue, le fuseau fixe de l'horloge le décalait d'une heure.
 - **Fenêtre** : les variations se groupent par heure de fin (`resets_at`) ; le début est `fin − 5 h`.
 - **Règle de datation** (décision de l'utilisateur) : dans une fenêtre, on suit le plus haut pourcentage atteint et l'heure à laquelle il a été vu pour la dernière fois, en partant de 0 au début de la fenêtre. Une variation plus basse est ignorée : une session inactive renvoie un pourcentage ancien. Une variation plus haute apporte `pct − plus haut` points. Ces points sont **datés** à l'heure d'horloge de la variation si la précédente observation date de **30 min** au plus. Sinon, ils sont **non datés**. Une variation égale au plus haut met à jour l'heure de la dernière observation.
 - **Moyenne par heure** (décision de l'utilisateur) : le total des points datés dans cette heure divisé par le nombre de jours de la période. La période va du jour de la première variation à aujourd'hui inclus. Une heure qui n'a reçu aucun point daté affiche « — », jamais 0. Le pied du tableau donne la période, le nombre de jours et la part non datée en pourcentage du total des points.

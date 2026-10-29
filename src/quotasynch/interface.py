@@ -4,7 +4,6 @@ from dataclasses import dataclass, replace
 
 from quotasynch import journal, scheduler
 from quotasynch.config import Config, ConfigError, load_config, parse_anchors, write_config
-from quotasynch.consommation import ParHeure
 from quotasynch.system import System
 
 JOURNAL_LIMIT = 50
@@ -40,15 +39,6 @@ def journal_rows(system: System, limit: int = JOURNAL_LIMIT) -> list[JournalRow]
             )
         )
     return rows
-
-
-def pied_heures(par: ParHeure) -> str:
-    """Le pied du tableau des heures : période, nombre de jours, part non datée."""
-    jours = "jour" if par.jours == 1 else "jours"
-    part = (
-        "aucun point de fenêtre" if par.non_date == NONE else f"{par.non_date} de points non datés"
-    )
-    return f"Du {par.periode} ({par.jours} {jours}) · {part}"
 
 
 def load_hours(system: System) -> HoursView:

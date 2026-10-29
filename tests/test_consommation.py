@@ -51,8 +51,7 @@ def test_seule_une_hausse_vue_dans_les_30_min_de_l_observation_precedente_est_da
     assert [ligne.heure for ligne in vue.lignes] == [f"{h:02d} h" for h in range(24)]
     moyennes = {ligne.heure: ligne.moyenne for ligne in vue.lignes if ligne.moyenne != "—"}
     assert moyennes == {"03 h": "2,5", "07 h": "2,5", "08 h": "3,5", "09 h": "3,0"}
-    assert (vue.periode, vue.jours) == ("25/10 – 26/10", 2)
-    assert vue.non_date == "44 %"  # 18 non datés sur 41 points
+    assert vue.pied == "Du 25/10 au 26/10 (2 jours) · 44 % de points non datés"  # 18 sur 41
 
 
 def test_sans_aucun_point_la_part_non_datee_est_un_tiret(machine: Machine) -> None:
@@ -62,7 +61,21 @@ def test_sans_aucun_point_la_part_non_datee_est_un_tiret(machine: Machine) -> No
 
     assert vue is not None
     assert {ligne.moyenne for ligne in vue.lignes} == {"—"}
-    assert (vue.periode, vue.jours, vue.non_date) == ("26/10 – 26/10", 1, "—")
+    assert vue.pied == "Du 26/10 au 26/10 (1 jour) · aucun point de fenêtre"
+
+
+def test_une_hausse_a_30_min_pile_est_datee_meme_ecrite_dans_le_desordre(
+    machine: Machine,
+) -> None:
+    fin = _a(26, 12, 0)
+    _variation(machine, _a(26, 8, 0), 9, fin)  # écrite avant la précédente
+    _variation(machine, _a(26, 7, 30), 4, fin)  # 4 datés à 7 h, 30 min pile après le début
+
+    vue = par_heure(machine.system)
+
+    assert vue is not None
+    moyennes = {ligne.heure: ligne.moyenne for ligne in vue.lignes if ligne.moyenne != "—"}
+    assert moyennes == {"07 h": "4,0", "08 h": "5,0"}  # 5 datés à 8 h, 30 min pile après 07:30
 
 
 def test_fenetres_les_plus_recentes_d_abord_avec_plus_haut_heure_du_100_et_part_datee(

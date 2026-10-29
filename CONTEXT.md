@@ -53,5 +53,5 @@ Un point de fenêtre consommé dont on ne peut pas dire à quelle heure, parce q
 _À éviter_ : point estimé, point lissé
 
 **Interface** :
-L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage et où l'on lit le journal.
+L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage, où l'on lit le journal et la consommation par heure et par fenêtre.
 _À éviter_ : fenêtre (le mot désigne la période de quota), GUI, application

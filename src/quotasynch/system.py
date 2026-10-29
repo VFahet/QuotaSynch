@@ -17,6 +17,10 @@ def _now() -> datetime:
     return datetime.now().astimezone()
 
 
+def _local_time(timestamp: float) -> datetime:
+    return datetime.fromtimestamp(timestamp).astimezone()
+
+
 def _environ() -> Mapping[str, str]:
     return dict(os.environ)
 
@@ -26,6 +30,7 @@ class System:
     environ: Mapping[str, str] = field(default_factory=_environ)
     run_process: RunProcess = subprocess.run
     clock: Callable[[], datetime] = _now
+    local_time: Callable[[float], datetime] = _local_time
 
     def config_file(self) -> Path:
         base = self.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")

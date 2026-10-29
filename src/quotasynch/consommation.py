@@ -4,12 +4,12 @@ import json
 import math
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 
 from quotasynch import jsonl
+from quotasynch.interface import NONE
 from quotasynch.system import System
 
-NONE = "—"
 DUREE_FENETRE = timedelta(hours=5)
 ECART_DATABLE = timedelta(minutes=30)
 FENETRES_AFFICHEES = 50
@@ -24,9 +24,21 @@ class LigneHeure:
 @dataclass(frozen=True)
 class ParHeure:
     lignes: list[LigneHeure]
-    periode: str
+    premier: str
+    dernier: str
     jours: int
     non_date: str
+
+    @property
+    def pied(self) -> str:
+        """Le pied du tableau des heures : période, nombre de jours, part non datée."""
+        jours = "jour" if self.jours == 1 else "jours"
+        part = (
+            "aucun point de fenêtre"
+            if self.non_date == NONE
+            else f"{self.non_date} de points non datés"
+        )
+        return f"Du {self.premier} au {self.dernier} ({self.jours} {jours}) · {part}"
 
 
 @dataclass(frozen=True)
@@ -57,11 +69,11 @@ class _Fenetre:
 def par_heure(system: System) -> ParHeure | None:
     """Les points de fenêtre consommés en moyenne par jour, par heure ; None sans variation."""
     aujourd_hui = system.clock()
-    variations = _lire(system, aujourd_hui.tzinfo)
+    variations = _lire(system)
     if not variations:
         return None
     premier = min(v.heure for v in variations).date()
-    jours = (aujourd_hui.date() - premier).days + 1
+    jours = max(1, (aujourd_hui.date() - premier).days + 1)  # 1 au moins si l'horloge recule
     par_heure_du_jour: dict[int, float] = defaultdict(float)
     non_dates = 0.0
     for fenetre in _fenetres(variations):
@@ -77,7 +89,8 @@ def par_heure(system: System) -> ParHeure | None:
             )
             for h in range(24)
         ],
-        periode=f"{premier:%d/%m} – {aujourd_hui:%d/%m}",
+        premier=f"{premier:%d/%m}",
+        dernier=f"{aujourd_hui:%d/%m}",
         jours=jours,
         non_date=f"{_arrondi(100 * non_dates / total)} %" if total else NONE,
     )
@@ -85,7 +98,7 @@ def par_heure(system: System) -> ParHeure | None:
 
 def par_fenetre(system: System) -> list[LigneFenetre]:
     """Les fenêtres, la plus récente d'abord, avec leur plus haut, leur 100 % et leur part datée."""
-    variations = _lire(system, system.clock().tzinfo)
+    variations = _lire(system)
     fenetres = sorted(_fenetres(variations), key=lambda f: f.fin, reverse=True)
     return [_ligne_fenetre(f) for f in fenetres[:FENETRES_AFFICHEES]]
 
@@ -108,17 +121,18 @@ def _arrondi(valeur: float) -> int:
 
 
 def _decimale(valeur: float) -> str:
-    return f"{valeur:.1f}".replace(".", ",")
+    """À une décimale, moitiés vers le haut comme `_arrondi`, avec une virgule."""
+    return f"{_arrondi(valeur * 10) / 10:.1f}".replace(".", ",")
 
 
-def _lire(system: System, fuseau: tzinfo | None) -> list[_Variation]:
+def _lire(system: System) -> list[_Variation]:
     def parse(ligne: str) -> _Variation:
         donnees = json.loads(ligne)
         limite = donnees["rate_limits"]["five_hour"]
         return _Variation(
-            heure=datetime.fromtimestamp(donnees["heure"], tz=fuseau),
+            heure=system.local_time(donnees["heure"]),
             pct=float(limite["used_percentage"]),
-            fin=datetime.fromtimestamp(limite["resets_at"], tz=fuseau),
+            fin=system.local_time(limite["resets_at"]),
         )
 
     return jsonl.read(system.variations_file(), parse)
@@ -139,7 +153,7 @@ def _dater(fin: datetime, variations: list[_Variation]) -> _Fenetre:
     un pourcentage ancien) ; une valeur égale au plus haut prolonge l'observation.
     """
     plus_haut = 0.0
-    vu = fin - DUREE_FENETRE
+    observee = fin - DUREE_FENETRE
     dates: list[tuple[datetime, float]] = []
     non_dates = 0.0
     cent: datetime | None = None
@@ -148,12 +162,12 @@ def _dater(fin: datetime, variations: list[_Variation]) -> _Fenetre:
             continue
         if variation.pct > plus_haut:
             points = variation.pct - plus_haut
-            if variation.heure - vu <= ECART_DATABLE:
+            if variation.heure - observee <= ECART_DATABLE:
                 dates.append((variation.heure, points))
             else:
                 non_dates += points
             plus_haut = variation.pct
             if cent is None and plus_haut >= 100:
                 cent = variation.heure
-        vu = variation.heure
+        observee = variation.heure
     return _Fenetre(fin, dates, non_dates, plus_haut, cent)
