@@ -12,6 +12,7 @@ from quotasynch.system import System
 NONE = "—"
 DUREE_FENETRE = timedelta(hours=5)
 ECART_DATABLE = timedelta(minutes=30)
+FENETRES_AFFICHEES = 50
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,15 @@ class ParHeure:
     periode: str
     jours: int
     non_date: str
+
+
+@dataclass(frozen=True)
+class LigneFenetre:
+    debut: str
+    fin: str
+    plus_haut: str
+    cent: str
+    datee: str
 
 
 @dataclass(frozen=True)
@@ -69,8 +79,32 @@ def par_heure(system: System) -> ParHeure | None:
         ],
         periode=f"{premier:%d/%m} – {aujourd_hui:%d/%m}",
         jours=jours,
-        non_date=f"{math.floor(100 * non_dates / total + 0.5)} %" if total else NONE,
+        non_date=f"{_arrondi(100 * non_dates / total)} %" if total else NONE,
     )
+
+
+def par_fenetre(system: System) -> list[LigneFenetre]:
+    """Les fenêtres, la plus récente d'abord, avec leur plus haut, leur 100 % et leur part datée."""
+    variations = _lire(system, system.clock().tzinfo)
+    fenetres = sorted(_fenetres(variations), key=lambda f: f.fin, reverse=True)
+    return [_ligne_fenetre(f) for f in fenetres[:FENETRES_AFFICHEES]]
+
+
+def _ligne_fenetre(fenetre: _Fenetre) -> LigneFenetre:
+    points_dates = sum(points for _, points in fenetre.dates)
+    total = points_dates + fenetre.non_dates
+    return LigneFenetre(
+        debut=f"{fenetre.fin - DUREE_FENETRE:%d/%m %H:%M}",
+        fin=f"{fenetre.fin:%d/%m %H:%M}",
+        plus_haut=f"{_arrondi(fenetre.plus_haut)} %",
+        cent=NONE if fenetre.cent is None else f"{fenetre.cent:%H:%M}",
+        datee=f"{_arrondi(100 * points_dates / total)} %" if total else NONE,
+    )
+
+
+def _arrondi(valeur: float) -> int:
+    """À l'entier le plus proche, moitiés vers le haut."""
+    return math.floor(valeur + 0.5)
 
 
 def _decimale(valeur: float) -> str:

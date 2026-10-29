@@ -1,7 +1,7 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from quotasynch.consommation import par_heure
+from quotasynch.consommation import LigneFenetre, par_fenetre, par_heure
 from tests.conftest import NOW, Machine
 
 FUSEAU = NOW.tzinfo
@@ -63,3 +63,47 @@ def test_sans_aucun_point_la_part_non_datee_est_un_tiret(machine: Machine) -> No
     assert vue is not None
     assert {ligne.moyenne for ligne in vue.lignes} == {"—"}
     assert (vue.periode, vue.jours, vue.non_date) == ("26/10 – 26/10", 1, "—")
+
+
+def test_fenetres_les_plus_recentes_d_abord_avec_plus_haut_heure_du_100_et_part_datee(
+    machine: Machine,
+) -> None:
+    # Fenêtre du 25/10 02:00–07:00 : 100 % atteint à 02:20, 20 min après le début.
+    _variation(machine, _a(25, 2, 20), 100, _a(25, 7, 0))  # 100 datés
+    # Fenêtre du 26/10 07:00–12:00 : ni 100 %, ni tout daté.
+    fin_26 = _a(26, 12, 0)
+    _variation(machine, _a(26, 7, 10), 5, fin_26)  # 5 datés
+    _variation(machine, _a(26, 8, 15), 12, fin_26)  # 7 non datés, 65 min après 07:10
+    _variation(machine, _a(26, 9, 0), 20, fin_26)  # 8 non datés, 45 min après 08:15
+    _variation(machine, _a(26, 9, 10), 26, fin_26)  # 6 datés
+
+    lignes = par_fenetre(machine.system)
+
+    assert lignes == [
+        LigneFenetre("26/10 07:00", "26/10 12:00", "26 %", "—", "42 %"),  # 11 datés sur 26
+        LigneFenetre("25/10 02:00", "25/10 07:00", "100 %", "02:20", "100 %"),
+    ]
+
+
+def test_une_fenetre_sans_point_a_une_part_datee_en_tiret(machine: Machine) -> None:
+    _variation(machine, _a(26, 9, 0), 0, _a(26, 12, 0))
+
+    assert par_fenetre(machine.system) == [
+        LigneFenetre("26/10 07:00", "26/10 12:00", "0 %", "—", "—"),
+    ]
+
+
+def test_aucune_variation_ne_donne_aucune_fenetre(machine: Machine) -> None:
+    assert par_fenetre(machine.system) == []
+
+
+def test_au_plus_50_fenetres_les_plus_recentes(machine: Machine) -> None:
+    debut = datetime(2026, 9, 1, tzinfo=FUSEAU)
+    for i in range(51):
+        fin = debut + timedelta(hours=5 * (i + 1))
+        _variation(machine, fin - timedelta(hours=4), 1, fin)
+
+    lignes = par_fenetre(machine.system)
+
+    assert len(lignes) == 50
+    assert (lignes[0].fin, lignes[-1].fin) == ("11/09 15:00", "01/09 10:00")
