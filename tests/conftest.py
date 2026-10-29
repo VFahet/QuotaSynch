@@ -55,6 +55,10 @@ class Machine:
     def releves_file(self) -> Path:
         return self.data_dir / "releves.jsonl"
 
+    @property
+    def variations_file(self) -> Path:
+        return self.data_dir / "variations.jsonl"
+
     def journal(self) -> list[dict[str, Any]]:
         """Les lignes du journal telles qu'écrites sur le disque."""
         if not self.journal_file.exists():
@@ -70,7 +74,12 @@ class Machine:
         return [json.loads(ligne) for ligne in lignes]
 
     def with_process(self, process: FakeProcess) -> System:
-        return System(environ=self.system.environ, run_process=process, clock=self.system.clock)
+        return System(
+            environ=self.system.environ,
+            run_process=process,
+            clock=self.system.clock,
+            local_time=self.system.local_time,
+        )
 
 
 @pytest.fixture
@@ -82,7 +91,12 @@ def machine(tmp_path: Path) -> Machine:
         "PATH": "",
         "ANTHROPIC_API_KEY": "sk-secret",
     }
-    system = System(environ=environ, run_process=process, clock=lambda: NOW)
+    system = System(
+        environ=environ,
+        run_process=process,
+        clock=lambda: NOW,
+        local_time=lambda timestamp: datetime.fromtimestamp(timestamp, tz=NOW.tzinfo),
+    )
     return Machine(
         system=system,
         process=process,
