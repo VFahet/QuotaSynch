@@ -66,7 +66,6 @@ Si l'indicateur de quota n'est pas disponible chez l'auteur, seule la métrique 
 3. **Relevé du quota** `releve-quota` — le pourcentage consommé est relevé à intervalle régulier et avant la fin de chaque fenêtre, puis conservé : un historique à analyser, non un affichage ni une alerte · bloqué par 1
 4. **Export des relevés** `export-releves` — les relevés sortent dans un format ouvrable ailleurs · bloqué par 3
 6. **Consommation par heure** `consommation-horaire` — l'interface montre à quelles heures de la journée le quota se consomme, et quelles fenêtres se vident, sans répartir ce qui ne se date pas · bloqué par 3
-
 7. **Quota de la semaine** `quota-semaine` — l'interface exprime le quota hebdomadaire en points de fenêtre, avec un total estimé sur les variations et sa marge d'erreur · bloqué par 6
 
 ### Plus tard · non ordonné
