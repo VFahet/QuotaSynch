@@ -52,6 +52,14 @@ _À éviter_ : historique, événement, delta
 Un point de fenêtre consommé dont on ne peut pas dire à quelle heure, parce que l'observation précédente date de plus de 30 min : il est compté à part, jamais réparti sur des heures.
 _À éviter_ : point estimé, point lissé
 
+**Point de fenêtre** :
+1 % d'une fenêtre de 5 h : l'unité dans laquelle l'interface compte la consommation, y compris celle de la semaine.
+_À éviter_ : point de quota, unité
+
+**Total de la semaine** :
+Le nombre de points de fenêtre qui valent 100 % de la semaine, estimé sur les variations de la semaine ; sa marge d'erreur se resserre à chaque variation.
+_À éviter_ : plafond, capacité
+
 **Interface** :
 L'écran `tkinter` ouvert par `quotasynch gui`, où l'on règle les heures d'ancrage, où l'on lit le journal et la consommation par heure et par fenêtre.
 _À éviter_ : fenêtre (le mot désigne la période de quota), GUI, application

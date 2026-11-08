@@ -3,7 +3,7 @@
 import tkinter
 from tkinter import ttk
 
-from quotasynch import consommation
+from quotasynch import consommation, semaine
 from quotasynch.config import ConfigError
 from quotasynch.interface import HoursView, journal_rows, load_hours, save_hours
 from quotasynch.scheduler import SchedulerError
@@ -89,12 +89,15 @@ class Interface:
     def build_consommation(self) -> None:
         tab = ttk.Frame(self.onglets, padding=12)
         tab.columnconfigure(0, weight=1)
-        tab.rowconfigure(0, weight=1)
+        tab.rowconfigure(1, weight=1)
         self.onglets.add(tab, text="Consommation")
+
+        self.semaine = ttk.Label(tab, wraplength=560)
+        self.semaine.grid(row=0, column=0, sticky="w", pady=(0, 8))
 
         self.usage = ttk.Frame(tab)
         self.usage.columnconfigure(0, weight=1)
-        self.usage.grid(row=0, column=0, sticky="nsew")
+        self.usage.grid(row=1, column=0, sticky="nsew")
         ttk.Label(self.usage, text="Heures de la journée").grid(row=0, column=0, sticky="w")
         self.hour_table = _table(self.usage, HOURS_COLUMNS, height=12)
         _with_scrollbar(self.usage, self.hour_table, row=1)
@@ -107,7 +110,7 @@ class Interface:
         self.usage.rowconfigure(4, weight=1)
 
         self.usage_empty = ttk.Label(tab, text=EMPTY_USAGE, wraplength=560)
-        self.usage_empty.grid(row=0, column=0, sticky="nw")
+        self.usage_empty.grid(row=1, column=0, sticky="nw")
 
     def load_hours(self) -> HoursView:
         view = load_hours(self.system)
@@ -161,6 +164,8 @@ class Interface:
             self.empty.grid()
 
     def refresh_consommation(self) -> None:
+        week = semaine.estimation(self.system)
+        self.semaine.configure(text="" if week is None else week.ligne)
         hours = consommation.par_heure(self.system)
         if hours is None:
             self.usage.grid_remove()
