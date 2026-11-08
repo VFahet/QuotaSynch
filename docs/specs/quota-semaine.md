@@ -1,6 +1,6 @@
 # spec: quota-semaine — Le quota de la semaine en points de fenêtre
 
-**Statut :** Draft
+**Statut :** Implemented
 **Enjeu :** 1
 **Mode :** Par tranches — trois tranches, deux d'entre elles parallélisables ; Enjeu 1 (lecture seule de données locales, aucun envoi, aucune écriture hors affichage).
 **Epic :** à ouvrir à l'arbitrage
@@ -55,7 +55,7 @@ Un **nouveau module `semaine.py`**, sans `tkinter`, qui lit `variations.jsonl` p
    - sinon → pas de total : la ligne montre seulement le pourcentage, « total inconnu ».
 8. **Semaine en cours** : celle dont la fin est après l'horloge de `System`. Si la dernière semaine connue est déjà finie, la semaine en cours vient de commencer (fin = fin connue + 7 j) : consommation 0, total repris de la semaine précédente. Sans aucune variation, `estimation` rend `None`.
 9. **Consommé affiché** : `w_dernier × T / 100`, avec le dernier `w` de la semaine en cours ; sur une semaine mesurée il rejoint `S`, sur un total repris il reste cohérent avec lui.
-10. **Mise en forme** : points arrondis à la dizaine, comme la marge ; milliers séparés par une espace insécable. Exemples : `Semaine : 46 % — ≈ 540 / 1 180 points de fenêtre (± 40, mesuré cette semaine)` ; `Semaine : 7 % — ≈ 80 / 1 180 points de fenêtre (semaine précédente)` ; `Semaine : 7 % — total inconnu`.
+10. **Mise en forme** : points arrondis à la dizaine, la marge à la dizaine supérieure ; milliers séparés par une espace insécable. Exemples : `Semaine : 46 % — ≈ 540 / 1 180 points de fenêtre (± 40, mesuré cette semaine)` ; `Semaine : 7 % — ≈ 80 / 1 180 points de fenêtre (semaine précédente)` ; `Semaine : 7 % — total inconnu`.
 
 ### Interface
 

@@ -47,6 +47,8 @@ Limites :
 
 Les fichiers sont dans `%LOCALAPPDATA%\QuotaSynch\` : `instantane.json` (l'instantané), `variations.jsonl` (les variations, écrites par la statusline seule) et `releves.jsonl` (les relevés, une ligne JSON par relevé, ajoutée à la fin). Une ligne porte `heure`, `fenetre_pct`, `fenetre_fin`, `semaine_pct`, `semaine_fin` et `age` (secondes entre l'écriture de l'instantané et le relevé). `uv run quotasynch status` montre le dernier relevé.
 
+L'onglet « Consommation » de l'interface donne aussi le quota de la semaine en points de fenêtre (1 % d'une fenêtre de 5 h), par exemple « ≈ 540 / 1 180 points de fenêtre ». Le total est estimé sur les variations de la semaine, avec sa marge ; en début de semaine, quand il est trop imprécis, c'est celui de la semaine précédente qui s'affiche.
+
 ## Développement
 
 `uv run poe check` enchaîne formatage, lint, types et tests.
